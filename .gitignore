@@ -138,11 +138,13 @@ dmypy.json
 cython_debug/
 
 #input data and models
-input/
-models/
+
 
 #data files
 *.CSV
+*.csv
 *.h5
 *.pkl
 *.pth
+*.txt
+*.zip
