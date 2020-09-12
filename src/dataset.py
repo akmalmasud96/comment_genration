@@ -23,26 +23,33 @@ class KerasBatchGenerator(object):
 
             for i in range(self.batch_size):
 
-                sentence_words = self.data[i].lower().split()
+                if self.current_idx >= len(self.data):
+                    # reset the index back to the start of the data set
+                    self.current_idx = 0
+
+                sentence_words = self.data[current_idx].lower().split()
                 # Initialize j to 0
                 j = 0
                 # Loop over the words of sentence_words
                 for w in sentence_words:
                     # Set the (i,j)th entry of X_indices to the index of the correct word.
-                    x[i, j] = self.word_to_index[w]
+                    x[current_idx, j] = self.word_to_index[w]
                     
                     # Increment j to j + 1
                     j = j+1
-                    
+
                     # break loop when j is equal to max length
                     if j == self.max_len:
                         break
                     
 
-                temp_y = x[i,1:]
+                temp_y = x[current_idx,1:]
                 # making array equal to max size
                 temp_y = np.append(temp_y,0)
                 # convert all of temp_y into a one hot representation
-                y[i, :, :] = to_categorical(temp_y, num_classes=self.vocabulary)
+                y[current_idx, :, :] = to_categorical(temp_y, num_classes=self.vocabulary)
+                self.current_idx +=1
+                print(x[current_idx,:])
+                print(temp_y)
                 
             yield x, y

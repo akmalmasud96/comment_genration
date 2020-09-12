@@ -20,4 +20,3 @@ def read_glove_file(glove_file):
             index_to_words[i] = w
             i = i + 1
     return words_to_index, index_to_words, word_to_vec_map
-
