@@ -1,9 +1,9 @@
 import os
 import tensorflow as tf
-from keras.layers import Dense, Activation, Embedding, Dropout, Input
+from keras.layers import Dense, Activation, Embedding, Dropout, Input, TimeDistributed
 from keras.layers import LSTM
 import numpy as np
-from keras.models import Model
+from keras.models import Sequential, load_model
 from keras.preprocessing import sequence
 from keras.initializers import glorot_uniform
 
@@ -59,34 +59,37 @@ def My_Model(input_shape, word_to_vec_map, word_to_index, hidden_size = 500):
     model -- a model instance in Keras
 
     """
+
     vocabulary = len(word_to_index)
+
+    model = Sequential()
     # Define sentence_indices as the input of the graph.
     # It should be of shape input_shape and dtype 'int32' (as it contains indices, which are integers).
-    sentence_indices = Input(shape=input_shape, dtype=np.int32)
+    model.add (Input(shape=input_shape, dtype=np.int32))
     
-    # Create the embedding layer pretrained with GloVe Vectors (≈1 line)
-    embedding_layer = pretrained_embedding_layer(word_to_vec_map, word_to_index)
-    
+    # Create the embedding layer pretrained with GloVe Vectors 
     # Propagate sentence_indices through your embedding layer
-    embeddings = embedding_layer(sentence_indices)   
+    model.add(pretrained_embedding_layer(word_to_vec_map, word_to_index))
     
-    # Propagate the embeddings through an LSTM layer with 128-dimensional hidden state
+     
+    # Propagate the embeddings through an LSTM layer
     # The returned output should be a batch of sequences.
-    X = LSTM(hidden_size, return_sequences=True)(embeddings)
+    model.add(LSTM(hidden_size, return_sequences=True))
+
     # Add dropout with a probability of 0.5
-    X = Dropout(0.5)(X)
-    # Propagate X trough another LSTM layer with 128-dimensional hidden state
+    model.add(Dropout(0.5))
+
+    # Propagate X trough another LSTM layer
     # The returned output should be a single hidden state, not a batch of sequences.
-    X = LSTM(hidden_size)(X)
+    model.add(LSTM(hidden_size, return_sequences=True))
+
     # Add dropout with a probability of 0.5
-    X = Dropout(0.5)(X)
-    # Propagate X through a Dense layer with vocabulary units
-    X = Dense(vocabulary)(X)
-    # Add a softmax activation
-    X = Activation('softmax')(X)
-    # Create Model instance which converts sentence_indices into X.
-    model = Model(sentence_indices, X)
+    model.add(Dropout(0.5))
     
-    ### END CODE HERE ###
+    # Propagate X through a Dense layer with vocabulary units
+    model.add(TimeDistributed(Dense(vocabulary)))
+    
+    # Add a softmax activation
+    model.add(Activation('softmax'))
     
     return model
