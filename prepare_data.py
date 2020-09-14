@@ -21,35 +21,48 @@ def read_all_csv(files_path):
     return data_frame
 
 
-def clean_text(txt):
-    txt = "".join(v for v in txt if v not in string.punctuation).lower()
-    txt = txt.encode("utf8").decode("ascii",'ignore')
-    return txt 
+def clean_text(txt,pun):
+    txt = txt.replace('US','america')
+    txt = txt.replace('<br/>','').lower()
+    txt = txt.replace('u.s','america')
+    txt = txt.replace('mr.','mr')
+    txt = txt.replace('mrs.','mr')
+    txt = txt.replace('...','.')
+    txt = "".join(v for v in txt if v not in pun)
+
+    txt = txt.translate(str.maketrans({key: " {0} ".format(key) for key in ',!.?'})).strip()
+    return txt
 
 
-def pre_processing(data):
+def pre_processing(data,pun):
 
     comments = data.values.tolist()
-    comments = [clean_text(x) for x in comments]
+    comments = [clean_text(x,pun) for x in comments]
     return comments
+
 
 def split_data(data):
 
-    train_data,test_data = train_test_split( data,test_size=0.20, random_state=42)
+    train_data, test_data = train_test_split(data,test_size=40, random_state=42)
+    test_data, val_data = train_test_split(test_data,test_size=10, random_state=42)
 
     with open('./inputs/train.txt', 'w') as f:
-        f.write(json.dumps(train_data))
+        f.write(" ".join(train_data))
     
     with open('./inputs/test.txt', 'w') as f:
-        f.write(json.dumps(test_data))
+        f.write(" ".join(test_data))
     
+    with open('./inputs/val.txt', 'w') as f:
+        f.write(" ".join(val_data))
 
 
 if __name__ == '__main__':
 
+    pun = '\"#$%&\'()*+=-/:;<=>@[\]^_`{|}~'
+
     comments = read_all_csv("inputs/")
     print(comments.head())
 
-    process_comments = pre_processing(comments)
+    process_comments = pre_processing(comments,pun)
 
     split_data(process_comments)

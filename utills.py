@@ -20,3 +20,11 @@ def read_glove_file(glove_file):
             index_to_words[i] = w
             i = i + 1
     return words_to_index, index_to_words, word_to_vec_map
+
+
+def file_to_word_ids(filename, words_to_index):
+
+    words = []
+    with open(filename, "r") as f:
+        words = f.read().split()
+    return [words_to_index.get(word, words_to_index["unk"]) for word in words]
