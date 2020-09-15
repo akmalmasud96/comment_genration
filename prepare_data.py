@@ -5,6 +5,8 @@ import json
 import string
 from sklearn.model_selection import train_test_split
 
+pun = set('\"#$%&\'()*+=-/:;<=>@[\]^_`{|}~')
+
 def read_all_csv(files_path):
     all_files = glob.glob(files_path + "*.csv")
 
@@ -21,30 +23,26 @@ def read_all_csv(files_path):
     return data_frame
 
 
-def clean_text(txt,pun):
+def clean_text(txt):
+    start = txt.find( '<a href' )
+    if start != -1:
+        txt = txt[:start]
     txt = txt.replace('US','america')
     txt = txt.replace('<br/>','').lower()
     txt = txt.replace('u.s','america')
     txt = txt.replace('mr.','mr')
     txt = txt.replace('mrs.','mr')
     txt = txt.replace('...','.')
+   
     txt = "".join(v for v in txt if v not in pun)
-
     txt = txt.translate(str.maketrans({key: " {0} ".format(key) for key in ',!.?'})).strip()
+    
     return txt
-
-
-def pre_processing(data,pun):
-
-    comments = data.values.tolist()
-    comments = [clean_text(x,pun) for x in comments]
-    return comments
-
 
 def split_data(data):
 
-    train_data, test_data = train_test_split(data,test_size=40, random_state=42)
-    test_data, val_data = train_test_split(test_data,test_size=10, random_state=42)
+    train_data, test_data = train_test_split(data,test_size=40, random_state=42, )
+    test_data, val_data = train_test_split(test_data,test_size=20, random_state=42)
 
     with open('./inputs/train.txt', 'w') as f:
         f.write(" ".join(train_data))
@@ -58,11 +56,15 @@ def split_data(data):
 
 if __name__ == '__main__':
 
-    pun = '\"#$%&\'()*+=-/:;<=>@[\]^_`{|}~'
-
-    comments = read_all_csv("inputs/")
-    print(comments.head())
-
-    process_comments = pre_processing(comments,pun)
-
-    split_data(process_comments)
+    
+    data_frame = read_all_csv("inputs/")
+    data_frame = pd.DataFrame(data_frame)
+    print(data_frame.head())
+    data_frame['commentBody'] = data_frame['commentBody'].apply(clean_text)
+    data_frame['length'] = data_frame['commentBody'].str.len() 
+    print(data_frame.head())
+    data_frame = data_frame[(data_frame['length']>=5)&(data_frame['length']<=250)]
+    data_frame.reset_index(drop=True,inplace=True)
+    
+ 
+    split_data(data_frame['commentBody'].values.tolist())
